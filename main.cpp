@@ -9,15 +9,15 @@ string generateTop(string funcName){
 
 int main() {
 
-    string arr[4] = {"open","close","read","write"};
-    
-
+    ifstream fileSource("config.txt");
     ofstream resultCpp("./result/file.cpp"),resultH("./result/file.h");
 
 
     string temp;
-    for ( int i = 0; i < 4; i++) {
-        temp = generateTop(arr[i]);
+
+    while(getline(fileSource,temp)) {
+        temp = generateTop(temp);
+
         resultH << temp << ";" << endl;
         resultCpp << temp << " {\n\n}\n\n"; 
     }
