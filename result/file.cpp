@@ -1,4 +1,4 @@
-void open( void ) {
+bool open( void ) {
 
 }
 
@@ -6,11 +6,11 @@ void close( void ) {
 
 }
 
-void read( void ) {
+int read( void ) {
 
 }
 
-void write( void ) {
+int write( void ) {
 
 }
 

@@ -1,0 +1,4 @@
+bool open
+void close
+int read
+int write
