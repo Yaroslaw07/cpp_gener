@@ -1,4 +1,4 @@
-bool open
+bool open bool wa
 void close
-int read
+int read char path bool x
 int write
