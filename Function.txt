@@ -1,4 +1,0 @@
-bool open bool wa
-void close
-int read char path bool x
-int write
