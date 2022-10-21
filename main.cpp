@@ -9,6 +9,28 @@
 namespace fs = std::filesystem;
 using namespace std;
 
+string join( const vector<string>& v, const string& delim ) {
+
+    return accumulate( v.begin() + 1, v.end(), v[0], 
+                        [&delim](std::string x, string y){
+                            return x + delim + y;
+                        }
+                    );
+}
+
+bool checkFileFormat(const string& path,const string& expectedFormat) {
+
+    size_t found= path.find_last_of("."); 
+
+    if ( found == string::npos ||
+         path.substr(found+1, path.size() - found) != expectedFormat) {
+
+        return false; 
+    }
+
+    return true;
+}
+
 string getVariable( stringstream& ss ) {
 
     string returnType;
@@ -20,16 +42,7 @@ string getVariable( stringstream& ss ) {
     return  returnType + " " + funcName;
 }
 
-string join( const vector<string>& v, const string& delim ) {
-
-    return accumulate( v.begin() + 1, v.end(), v[0], 
-                        [&delim](std::string x, string y){
-                            return x + delim + y;
-                        }
-                    );
-}
-
-string getFuncDecl(const string& funcDecl) {
+string getFuncDecl( const string& funcDecl ) {
 
     stringstream ss;
     ss.str(funcDecl);
@@ -57,102 +70,85 @@ string getFuncDecl(const string& funcDecl) {
     return res;
 } 
 
-void generateFiles( const string& sourcePathDir = "./source",
-                    const string& resultPathDir = "./result") {
+fs::directory_iterator handleSourceDir( const string& sourceDirPath ) {
+
+    try {
+        return fs::directory_iterator(sourceDirPath);
+    }
+    catch (exception&){
+        throw logic_error("can't find a source folder");
+    }
+}
+
+void handleResultDir(const string& resultDirPath = "./result") {
+  
+    try {
+        auto iterator = fs::directory_iterator(resultDirPath);
+    }
+    catch(exception&) {
+        fs::create_directories(resultDirPath);
+    }
+}
+
+fs::directory_iterator handleDirPaths( const string& sourceDirPath = "./source",
+                                       const string& resultDirPath = "./result" ) {
     
-    //check if directories exist
-    fs::directory_iterator iterator;
+    auto iterator = handleSourceDir(sourceDirPath);
+    handleResultDir(resultDirPath);
+    return iterator;
 
-    {
-        try {
-            iterator = fs::directory_iterator(resultPathDir);
-        } 
-        catch(exception& e) {
-            fs::create_directory(resultPathDir);
-        }
+}
 
 
-        try {
-            iterator = fs::directory_iterator(sourcePathDir);
-        }
-        catch(exception& e) {
-            cerr << "Can't find source file";
-            return;
-        }
+
+string getFileName(const string& path) {
+
+    size_t found = path.find_last_of("/")+1;
+    return path.substr(found,path.find_last_of(".") - found);
+}
+
+void handleEntry( const fs::directory_entry& sourceEntry,
+                  const string& resultDirPath ) {
+
+    if (sourceEntry.is_directory()) return;
+
+    string path = sourceEntry.path();
+
+    if (!checkFileFormat(path,"txt")) return;
+
+    ifstream sourceFile(path);
+
+    string fileName = getFileName(path);
+    ofstream resultHeader(resultDirPath + "/" + fileName + ".h");
+    ofstream resultCpp(resultDirPath + "/" + fileName + ".cpp");
+
+    while(getline(sourceFile,fileName)) {
+        fileName = getFuncDecl(fileName);
+        resultCpp << fileName << " {\n\n}\n\n";
+        resultHeader << fileName << ";" << endl;
     }
 
-    ifstream sourceFile;
+    sourceFile.close();
+    resultCpp.close();
+    resultHeader.close();
 
-    ofstream resultHeader, resultCpp;
-    string temp;
+}
 
-    stringstream ss;
+void generateFiles( const string& sourceDirPath = "./source",
+                    const string& resultDirPath = "./result" ) {
+    
+    //check if directories exist
+    fs::directory_iterator iterator = handleDirPaths();
 
     //handle every file in 
     for (const auto& entry : iterator ) {
-
-        if (entry.is_directory()) continue;
-
-        temp = entry.path();
-        size_t found = temp.find_last_of(".");
-
-        if (found == string::npos ||  temp.substr(found+1,3 ) != "txt") continue;
-
-        found = temp.find_last_of("/")+1;
-        temp = temp.substr(found,temp.find_last_of(".") - found);
-
-        sourceFile.open(entry.path());
-        cout << entry.path();
-        resultHeader.open(resultPathDir + "/" + temp + ".h");
-        resultCpp.open(resultPathDir + "/" + temp + ".cpp");
-
-
-        while(getline(sourceFile,temp)) {
-
-           
-            //cout << temp<<endl;
-
-            resultCpp << temp << " {\n\n}\n\n";
-            resultHeader << temp << ";" << endl;
-
-        }
-
-        sourceFile.close();
-        resultCpp.close();
-        resultHeader.close();
-
-
+        handleEntry(entry,resultDirPath);
     }
 }
 
 int main() {
 
-    generateFiles();    
+    generateFiles();
 
-    // open files
-    /*ifstream fileSource("Function.txt");
-    ofstream resultCpp("./result/file.cpp"),resultH("./result/file.h");
-
-    string temp;
-    stringstream ss;
-
-    // loop to handle every line of file
-    while(getline(fileSource,temp)) {
-
-        
-        ss.str(temp);
-
-        // handle line
-        temp = getFuncDecl(ss);
-
-        // write results to files
-        resultH << temp << ";" << endl;
-        resultCpp << temp << " {\n\n}\n\n"; 
-
-        ss.clear();
-    }
-
-    resultCpp.close();
-    resultH.close();*/
-
+    return 0;
 }
