@@ -98,26 +98,26 @@ void generateFiles( const string& sourcePathDir = "./source",
 
         if (found == string::npos ||  temp.substr(found+1,3 ) != "txt") continue;
 
-        //cout << entry.path() << "        |"<<temp.substr(found+1,3)<<"|";
-
         found = temp.find_last_of("/")+1;
         temp = temp.substr(found,temp.find_last_of(".") - found);
 
-        cout << temp << endl;
-
         sourceFile.open(entry.path());
+        cout << entry.path();
         resultHeader.open(resultPathDir + "/" + temp + ".h");
         resultCpp.open(resultPathDir + "/" + temp + ".cpp");
 
+
         while(getline(sourceFile,temp)) {
 
-            temp = getFuncDecl(temp);
+           
+            //cout << temp<<endl;
 
             resultCpp << temp << " {\n\n}\n\n";
             resultHeader << temp << ";" << endl;
 
         }
 
+        sourceFile.close();
         resultCpp.close();
         resultHeader.close();
 
