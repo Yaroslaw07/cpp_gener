@@ -1,21 +1,6 @@
-#include "entries.h"
+#include "entry.h"
+#include "additional.h"
 
-
-
-string join( const vector<string>& v, const string& delim ) {
-
-    return accumulate( v.begin() + 1, v.end(), v[0], 
-                        [&delim](std::string x, string y){
-                            return x + delim + y;
-                        }
-                    );
-}
-
-string getFileName(const string& path) {
-
-    size_t found = path.find_last_of("/")+1;
-    return path.substr(found,path.find_last_of(".") - found);
-}
 
 // to refactor
 string getVariable( stringstream& ss ) {
@@ -59,19 +44,6 @@ string getFuncDecl( const string& funcDecl ) {
 } 
 
 
-bool checkFileFormat( const string& path,const string& expectedFormat ) {
-
-    size_t found= path.find_last_of("."); 
-
-    if ( found == string::npos ||
-         path.substr(found+1, path.size() - found) != expectedFormat) {
-
-        return false; 
-    }
-
-    return true;
-}
-
 void handleEntry( const fs::directory_entry& sourceEntry,
                   const string& resultDirPath ) {
 
@@ -86,11 +58,11 @@ void handleEntry( const fs::directory_entry& sourceEntry,
 
     if (!checkFileFormat(path,"txt")) return;
 
-    ifstream sourceFile(path);
     string fileName = getFileName(path);
 
-    ofstream resultHeader(resultDirPath + "/" + fileName + ".h");
-    ofstream resultCpp(resultDirPath + "/" + fileName + ".cpp");
+    ifstream sourceFile(path);
+    ofstream resultHeader = getFile(path,fileName,"h"); 
+    ofstream resultCpp = getFile(path,fileName,"cpp");
 
     while(getline(sourceFile,fileName)) {
         fileName = getFuncDecl(fileName);
