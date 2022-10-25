@@ -2,6 +2,10 @@
 
 #include <fstream>
 #include <string>
+#include <vector>
+#include <sstream>
+#include <iostream>
+
 
 using namespace std;
 
@@ -9,4 +13,6 @@ ofstream getFile(const string& DirPath = ".",const string& fileName = "default",
 
 bool checkFileFormat( const string& path,const string& expectedFormat );
 
-string getFileName(const string& path);
+string getFileName( const string& path );
+
+void handlePaths( const string& sourcePath, const string& resultDirPath );

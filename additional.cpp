@@ -1,11 +1,24 @@
 #include "additional.h"
+#include <algorithm>
 
-string join( const vector<string>& v, const string& delim ) {
 
-    return accumulate( v.begin() + 1, v.end(), v[0], 
-                        [&delim](std::string x, string y){
-                            return x + delim + y;
-                        }
-                    );
+bool isGoodType( string type ) {
+    return count(goodTypes.begin(),goodTypes.end(),type);
 }
+
+
+string join(const vector<Variable>& params, const string& delim) {
+    if (params.empty()) return "";
+
+    string res = *params.begin();
+
+    if (params.begin() == params.end()) return res;
+
+    for (auto i = params.begin() + 1;i != params.end();++i) {
+        res += delim + string(*i);
+    }
+
+    return res;
+}
+
 

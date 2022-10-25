@@ -3,7 +3,14 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include <iostream>
+#include "variable.h"
 
 using namespace std;
 
-string join( const vector<string>& v, const string& delim );
+
+const vector<string> goodTypes = {"void","int","string","bool","char"};
+
+bool isGoodType( string type );
+
+string join(const vector<Variable>& params, const string& delim);
