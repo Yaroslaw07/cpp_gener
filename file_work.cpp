@@ -8,25 +8,6 @@ ofstream getFileStream( const string& DirPath,const string& fileName,const strin
     return ofstream(DirPath + "/" + fileName + "." + fileFormat);
 }
 
-bool checkFileFormat( const string& path,const string& expectedFormat ) {
-
-    size_t found= path.find_last_of("."); 
-
-    if ( found == string::npos ||
-         path.substr(found+1, path.size() - found) != expectedFormat) {
-
-        return false; 
-    }
-
-    return true;
-}
-
-string getFileName( const string& path ) {
-
-    size_t found = path.find_last_of("/")+1;
-    return path.substr(found,path.find_last_of(".") - found);
-}
-
 Variable getVariable( stringstream& ss ) {
 
     string type;
@@ -60,12 +41,33 @@ void handleFuncDecl(vector<Variable>& buff,const string& funcDecl ) {
     }
 }
 
+
+
 string getFuncBody(const string& type) {
     if (type == "void") {
         return "";
     }
 
-    return type + " res;\n\nreturn res;";
+    return "\t" + type + " res;\n\n\treturn res;";
+}
+
+void handleFileLine(ofstream& header,ofstream& cpp,const string& line) {
+    vector<Variable> buffer;
+    string res;
+
+    handleFuncDecl(buffer,line);
+    
+    if (buffer.size() == 0) return;
+    
+    res = *(buffer.begin());
+    res += " (";
+    
+    if (buffer.size() >= 2) {
+        res += join({buffer.cbegin() + 1,buffer.cend()},",");
+    }
+
+    cpp << res << ") {\n"<<getFuncBody((*buffer.begin()).getType())<<"\n}\n\n";
+    header << res << ");" << endl;
 }
 
 void handlePaths( const string& sourcePath,
@@ -76,29 +78,15 @@ void handlePaths( const string& sourcePath,
     ifstream sourceFile(sourcePath);
     ofstream resultHeader = getFileStream(resultDirPath,temp,"h"); 
     ofstream resultCpp = getFileStream(resultDirPath,temp,"cpp");
-    vector<Variable> buffer;
 
     while(getline(sourceFile,temp)) {
 
-        buffer.clear();
-
-        try {
-            handleFuncDecl(buffer,temp);
-        } catch(logic_error& le) {
-            cerr << le.what() << " in " << sourcePath << endl;
+        try{
+            handleFileLine(resultHeader,resultCpp,temp);
         }
-
-        if (buffer.size() == 0) continue;
-
-        temp = *(buffer.begin());
-        temp += " (";
-
-        if (buffer.size() >= 2) {
-            temp += join({buffer.cbegin() + 1,buffer.cend()},",");
+        catch(logic_error& le) {
+             cerr << le.what() << " in " << sourcePath << endl;
         }
-
-        resultCpp << temp << ") {\n"<<getFuncBody((*buffer.begin()).getType())<<"\n}\n\n";
-        resultHeader << temp << ");" << endl;
     }
 
     sourceFile.close();
